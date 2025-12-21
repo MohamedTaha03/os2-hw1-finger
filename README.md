@@ -1,145 +1,228 @@
-# Custom `finger` Implementation in C
+<div align="center">
 
-This project is a custom implementation of the classic Unix `finger` utility, written in C. It retrieves and displays detailed information about system users by querying standard Unix data sources.
+# 👆 Finger - Unix User Information Tool
 
-## Features
+[![C](https://img.shields.io/badge/Language-C-blue.svg?logo=c)](https://en.wikipedia.org/wiki/C_(programming_language))
+[![POSIX](https://img.shields.io/badge/Platform-POSIX%2FLinux-green.svg?logo=linux)](https://en.wikipedia.org/wiki/POSIX)
+[![License](https://img.shields.io/badge/License-Educational-orange.svg)](.)
+[![OS2](https://img.shields.io/badge/Course-Operating%20Systems%202-purple.svg)](.)
 
-- **User Lookup**: Find users by their login name or, by default, perform a case-insensitive search on their real name (GECOS field).
-- **Multiple Output Formats**:
-  - **Long Format (-l)**: A comprehensive, multi-line report for each user.
-  - **Short Format (-s)**: A compact, single-line tabular view.
-- **Data Sources**: The program aggregates information from multiple system files:
-  - `/etc/passwd`: For basic user details (login, real name, office, phones, home directory, shell).
-  - `/var/run/utmp`: For active session details (login time, terminal, idle time).
-  - `/var/mail/<username>`: To check mail status.
-  - `~/.plan`, `~/.project`, `~/.pgpkey`: To display user-provided information (can be disabled).
-- **Idle Time Calculation**: Estimates user idle time by checking the last access time of their terminal device (`/dev/<tty>`).
-- **Phone Number Formatting**: Automatically formats phone numbers from the GECOS field into a readable, standardized layout.
-- **Graceful Fallbacks**: Displays placeholder information (e.g., "*") when data (like login time) is unavailable.
+*A modern, feature-rich implementation of the classic Unix `finger` command*
 
-## Build Instructions
+</div>
 
-This program is designed for a POSIX-compliant environment (e.g., Linux) and requires a C compiler like `gcc`.
+---
 
-### Recommended Build (Optimized)
+## 📖 Overview
 
-This command compiles the program with optimizations and all recommended warnings enabled. This is the suggested command for general use.
+This project is a custom implementation of the classic Unix `finger` utility, written entirely in **C**. It retrieves and displays detailed information about system users by querying standard Unix data sources like `/etc/passwd`, `utmp`, and user home directories.
 
-```sh
+> 💡 **Fun Fact**: The original `finger` command dates back to 1971 and was one of the first social networking tools, allowing users to find information about each other on shared systems!
+
+---
+
+## ✨ Features
+
+| Feature | Description |
+|---------|-------------|
+| 🔍 **User Lookup** | Find users by login name or real name (case-insensitive GECOS search) |
+| 📋 **Long Format** | Comprehensive multi-line report with all user details |
+| 📊 **Short Format** | Compact single-line tabular view |
+| ⏰ **Idle Time** | Real-time calculation from terminal device access times |
+| 📞 **Phone Formatting** | Smart formatting for various phone number lengths |
+| 📬 **Mail Status** | Check user's mail status from `/var/mail` |
+| 📝 **Plan/Project** | Display `.plan`, `.project`, and `.pgpkey` files |
+
+### Data Sources
+
+```
+📁 System Files Used
+├── /etc/passwd        → User details (name, shell, home dir)
+├── /var/run/utmp      → Active sessions (login time, terminal)
+├── /var/mail/<user>   → Mail status
+└── ~/<user>/
+    ├── .plan          → User's plan file
+    ├── .project       → Current project info
+    └── .pgpkey        → PGP public key
+```
+
+---
+
+## 🛠️ Build Instructions
+
+### Prerequisites
+
+- **OS**: Linux / POSIX-compliant system
+- **Compiler**: GCC (or any C99-compatible compiler)
+
+### 🚀 Quick Build (Recommended)
+
+```bash
 gcc -D_GNU_SOURCE -Wall -Wextra -O2 -o finger finger.c
 ```
 
-**Command Breakdown:**
-- `gcc`: The compiler to use.
-- `-D_GNU_SOURCE`: This flag is crucial. It enables non-standard, GNU-specific extensions, including `strcasestr`, which is used for case-insensitive name matching. Without this, the build may fail on some systems.
-- `-Wall -Wextra`: Enable all standard and extra warnings. This helps catch potential bugs and stylistic issues in the code.
-- `-O2`: Apply level-2 optimizations, which improves the performance of the final executable.
-- `-o finger`: Specifies that the output executable file should be named `finger`.
-- `finger.c`: The input source file to compile.
+### 🔧 Build Options Explained
 
-### Debug Build
+| Flag | Purpose |
+|------|---------|
+| `-D_GNU_SOURCE` | Enables GNU extensions (required for `strcasestr`) |
+| `-Wall -Wextra` | Enable comprehensive warnings |
+| `-O2` | Level 2 optimization for better performance |
+| `-o finger` | Output executable name |
 
-If you need to debug the program (e.g., using `gdb`), compile it with debugging symbols and without optimization. This makes it much easier to inspect variables and trace the program's execution.
+### 🐛 Debug Build
 
-```sh
+```bash
 gcc -D_GNU_SOURCE -Wall -Wextra -g -o finger_debug finger.c
 ```
 
-**Command Breakdown:**
-- `-g`: Includes debugging information (like function names, line numbers, and variable names) in the executable.
-- `-o finger_debug`: It's good practice to give the debug executable a different name to avoid confusion with the optimized version.
+Use this build with `gdb` for step-by-step debugging.
 
-## Usage
+---
 
-The program can be run in two main modes:
+## 🎯 Usage
 
-1.  **Query Specific Users**: Provide one or more login names or real names as arguments.
-2.  **List Logged-in Users**: Run without arguments to get a report on all currently active users.
-
-### Command-Line Syntax
+### Syntax
 
 ```
-finger [options] [user1] [user2] ...
+./finger [options] [user1] [user2] ...
 ```
 
-### Options
+### Command-Line Options
 
--   `-l` (Long Format): Displays a detailed, multi-line report. This is the **default** format.
--   `-s` (Short Format): Displays a compact, single-line table. Overrides `-l`.
--   `-p` (No Plan): Use long format but **suppress** the display of `~/.plan`, `~/.project`, and `~/.pgpkey` files. This is useful for a slightly less verbose report.
--   `-m` (Match Exact): Disables the default behavior of matching against real names (GECOS field). When this flag is active, arguments are **only** treated as login names.
+| Option | Name | Description |
+|--------|------|-------------|
+| `-l` | Long Format | Detailed multi-line output **(default)** |
+| `-s` | Short Format | Compact single-line table |
+| `-p` | No Plan | Long format without `.plan`/`.project`/`.pgpkey` |
+| `-m` | Match Exact | Match login names only (disable GECOS search) |
 
-### Examples
+### 📝 Examples
 
-- **Get default (long format) info for a user**:
-  ```sh
-  ./finger root
-  ```
+```bash
+# Get detailed info for a user
+./finger root
 
-- **Get short format info for multiple users**:
-  ```sh
-  ./finger -s root daemon
-  ```
+# Short format for multiple users
+./finger -s root daemon
 
-- **Search for a user by their real name (e.g., "John Doe")**:
-  ```sh
-  ./finger "John Doe"
-  ```
+# Search by real name
+./finger "John Doe"
 
-- **Get long format info without the .plan, .project, or .pgpkey files**:
-  ```sh
-  ./finger -p username
-  ```
+# Long format without plan files
+./finger -p username
 
-- **Force a search by login name only (disables real name matching)**:
-  ```sh
-  ./finger -m username
-  ```
+# Exact login name match only
+./finger -m username
 
-- **List all currently logged-in users**:
-  ```sh
-  ./finger
-  ```
+# List all logged-in users
+./finger
+```
 
-## Detailed Information Displayed
+---
 
-### Long Format (`-l`)
+## 📊 Output Formats
 
--   **Login**: The user's login name.
--   **Name**: The user's full real name.
--   **Directory**: The user's home directory path.
--   **Shell**: The user's default login shell.
--   **Office**: Office location (from GECOS).
--   **Office Phone**: Office phone number (from GECOS, formatted).
--   **Home Phone**: Home phone number (from GECOS, formatted).
--   **On since**: Login timestamp and terminal device.
--   **Idle**: Estimated idle time.
--   **Mail**: Mail status (e.g., "No Mail" or "Mail last read ...").
--   **Plan, Project, PGP Key**: Contents of `~/.plan`, `~/.project`, and `~/.pgpkey` respectively (unless `-p` is used).
+### Long Format (`-l`) - Default
+
+```
+Login: john                            Name: John Doe
+Directory: /home/john                  Shell: /bin/bash
+Office: Room 123                       Office Phone: 555-1234       Home Phone: 555-5678
+On since Monday, 21 December 2024 10:30:00 on pts/0 from
+   2 hours 15 minutes 30 seconds idle
+Mail: Mail last read Dec 21 09:00
+Plan: Working on OS2 homework
+Project: Finger Implementation
+```
 
 ### Short Format (`-s`)
 
--   **Login**: Login name.
--   **Name**: Real name.
--   **Idle Time**: Idle time in a compact format (minutes or HH:MM).
--   **Login Time**: Compact login timestamp.
--   **Office**: Office location.
--   **Office Phone**: Formatted office phone number.
--   **Tty**: Terminal name. An asterisk (`*`) appears next to the terminal if it is not writable.
+```
+Login      Name            Idle Time       Login Time      Office          Office Phone    Tty
+john       John Doe        2:15            Dec 21 10:30    Room 123        555-1234        pts/0
+```
 
-## Implementation Details
+---
 
--   **User Info Storage**: A `UserInfo` struct (`finger.h`) holds all retrieved data for a user before printing.
--   **GECOS Parsing**: The GECOS field from `/etc/passwd` is parsed by splitting on commas to extract the real name, office location, and phone numbers.
--   **Login/Idle Time**: The `utmp` file is scanned for `USER_PROCESS` entries to find active sessions. Idle time is calculated by `stat`-ing the terminal device file in `/dev` and comparing its last access time (`st_atime`) to the current time.
--   **File Reading**: User-specific files (`.plan`, etc.) are read from their home directory. The program handles cases where these files do not exist or are not readable.
--   **Duplicate Prevention**: When listing all logged-in users, the program keeps track of processed users to avoid printing duplicate entries for users with multiple sessions.
--   **Error Handling**: The program provides informative error messages if a user is not found or if system files cannot be accessed.
+## 🏗️ Project Structure
 
-## Code Structure
+```
+os2-hw1-finger/
+├── 📄 finger.c      # Main source code (540+ lines)
+│   ├── get_user_info()      # Fetch user data from system
+│   ├── get_idle_time()      # Calculate terminal idle time
+│   ├── get_login_time()     # Parse login timestamps
+│   ├── get_mail_status()    # Check mail file status
+│   ├── read_user_files()    # Read .plan, .project, .pgpkey
+│   ├── format_phone_number() # Smart phone formatting
+│   ├── print_user_info()    # Output formatting (long/short)
+│   ├── parse_command_line() # CLI argument parsing
+│   └── main()               # Entry point & orchestration
+│
+├── 📄 finger.h      # Header file
+│   ├── UserInfo struct      # Data container for user info
+│   ├── Function prototypes  # All function declarations
+│   └── Required includes    # System headers
+│
+└── 📄 README.md     # This file
+```
 
--   `finger.c`: Contains the main logic, including command-line parsing, user lookup, data retrieval functions, and printing routines.
--   `finger.h`: Defines the `UserInfo` struct, function prototypes, and necessary header includes.
+---
 
-## License / Usage
-This code is provided for educational purposes in the Operating Systems 2 course. Ensure compliance with your institution's policies if reusing or modifying the code.
+## 🔬 Implementation Highlights
+
+### 📌 Key Algorithms
+
+1. **GECOS Parsing**: Splits the comma-separated GECOS field to extract real name, office, and phone numbers
+
+2. **Idle Time Calculation**: 
+   ```c
+   idle_time = current_time - stat("/dev/tty").st_atime
+   ```
+
+3. **Phone Number Formatting**:
+   | Input Length | Output Format |
+   |--------------|---------------|
+   | 11 digits | `+X-XXX-XXX-XXXX` |
+   | 10 digits | `XXX-XXX-XXXX` |
+   | 7 digits | `XXX-XXXX` |
+   | 4-5 digits | `xX-XXXX` or `xXXXX` |
+
+4. **Duplicate Prevention**: Tracks processed users to avoid duplicate entries for users with multiple sessions
+
+### 🛡️ Error Handling
+
+- ✅ User not found → Informative error message
+- ✅ Missing files → Graceful fallback with `*` placeholder
+- ✅ Permission denied → Handled silently
+- ✅ Memory allocation → Proper error reporting
+
+---
+
+## 📚 Technical Details
+
+| Aspect | Implementation |
+|--------|----------------|
+| **Language** | C (C99 standard) |
+| **Max Users** | 100 (configurable via `MAX_USERS`) |
+| **Buffer Sizes** | Login: 32, Name: 64, Path: 256, Plan: 1024 |
+| **System Calls** | `getpwnam`, `getpwent`, `setutent`, `stat`, `access` |
+
+---
+
+## 📜 License
+
+> ⚠️ **Educational Use Only**
+> 
+> This code is provided for educational purposes as part of the **Operating Systems 2** course (Homework 1). Ensure compliance with your institution's academic integrity policies before reusing or modifying this code.
+
+---
+
+<div align="center">
+
+**Made with ❤️ for OS2 Course**
+
+*Matricola: 2086047*
+
+</div>
